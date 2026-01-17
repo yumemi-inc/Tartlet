@@ -23,7 +23,6 @@ Key benefits:
 - [Rendering multiple states](#rendering-multiple-states)
 - [Handling multiple events](#handling-multiple-events)
 - [Mock for previewing in Android Studio](#mock-for-previewing-in-android-studio)
-- [Mock a ViewModel for testing](#mock-a-viewmodel-for-testing)
 
 ## Installation
 
@@ -53,7 +52,7 @@ sealed interface CounterEvent {
 
 ### Store
 
-Typically implemented by a ViewModel:
+Typically implemented by a `ViewModel`:
 
 ```kotlin
 class CounterViewModel : ViewModel(), Store<CounterState, CounterEvent> { // Inherits Store
@@ -76,6 +75,8 @@ class CounterViewModel : ViewModel(), Store<CounterState, CounterEvent> { // Inh
     }
 }
 ```
+
+> **Note**: Tartlet itself does not have a state persistence feature. To maintain the screen state, the `ViewModel` must serve as the `Store`.
 
 ### ViewStore
 
@@ -275,31 +276,6 @@ fun CounterScreenLoadingPreview() {
 }
 ```
 
+> **Tips**: This can also be used to mock dependencies in unit tests for composables.
+
 This allows UI development with only state, without requiring a ViewModel.
-
-## Mock a ViewModel for testing
-
-Make ViewModel methods an interface and replace them with mocks during testing.
-
-```kt
-interface CounterStore : Store<CounterState, Nothing> {
-    fun increment()
-    fun decrement()
-}
-
-class CounterViewModel : ViewModel(), CounterStore { // Inherits CounterStore
-    private val _state = MutableStateFlow<CounterState>(CounterState(count = 0))
-    override val state = _state.asStateFlow() // Override state property
-
-    override fun increment() { ... } // Override increment() method
-    override fun decrement() { ... } // Override decrement() method
-}
-
-@Composable
-fun CounterScreen(
-    // Specify CounterStore instead of CounterViewModel for testing
-    viewStore: ViewStore<CounterState, Nothing, CounterStore> = rememberViewStore { viewModel<CounterViewModel>() },
-) {
-    // ...
-}
-```
