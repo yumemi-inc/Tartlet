@@ -144,12 +144,15 @@ class ViewStore<S : Any, E : Any, ST : Store<*, *>>(
 @Suppress("unused")
 @Composable
 fun <S : Any, E : Any, ST : Store<S, E>> rememberViewStore(store: @Composable () -> ST): ViewStore<S, E, ST> {
-    val store = store()
-    val rememberStore = remember { store } // persist the initial Store instance across recompositions
-    val state by rememberStore.state.collectAsState()
+    // persist the initial Store instance across recompositions
+    val holder = remember { object { var value: ST? = null } }
+    val rememberedStore = holder.value ?: store().also { holder.value = it }
+
+    val state by rememberedStore.state.collectAsState()
+
     return remember(state) {
         ViewStore(
-            store = rememberStore,
+            store = rememberedStore,
             state = { state },
         )
     }
